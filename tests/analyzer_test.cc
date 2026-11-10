@@ -26,7 +26,7 @@ TEST(Tokenizer, SimpleExpression)
   boolean_expressions::Tokenizer t("a & b");
   auto parsed_string = t.ParseInput();
 
-  EXPECT_EQ(parsed_string.size(), 3);
+  EXPECT_EQ(parsed_string.size(), 4);
 
   EXPECT_EQ(parsed_string[0].text, "a");
   EXPECT_EQ(parsed_string[0].kType, boolean_expressions::TokenType::kIdentifier);
@@ -36,6 +36,15 @@ TEST(Tokenizer, SimpleExpression)
 
   EXPECT_EQ(parsed_string[2].text, "b");
   EXPECT_EQ(parsed_string[2].kType, boolean_expressions::TokenType::kIdentifier);
+}
+
+TEST(Tokenizer, EmptyExpression)
+{
+  boolean_expressions::Tokenizer t("");
+  auto parsed_string = t.ParseInput();
+
+  EXPECT_EQ(parsed_string.size(), 1);
+  EXPECT_EQ(parsed_string[0].kType, boolean_expressions::TokenType::kEOI);
 }
 
 

@@ -13,9 +13,17 @@ Tokenizer::Tokenizer(std::string_view input)
 
 const std::vector<Token> &Tokenizer::ParseInput()
 {
-    while(HasMore())
+  tokens_.clear();
+
+    while(true)
     {
-      tokens_.push_back(NextToken());
+      Token token = NextToken();
+      tokens_.push_back(token);
+
+      if(token.kType == TokenType::kEOI)
+      {
+        break;
+      }
     }
     return GetTokens();
 }
@@ -25,7 +33,7 @@ Token Tokenizer::NextToken()
     SkipWhiteSpace();
     if(!HasMore())
     {
-      return {TokenType::kEOI, SourceSpan{pos_, pos_}, { }};
+      return {TokenType::kEOI, SourceSpan{pos_, pos_}, ""};
     }
     std::size_t begin = pos_;
     char current = source_[pos_];
