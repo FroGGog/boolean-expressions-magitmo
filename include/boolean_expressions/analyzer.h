@@ -7,8 +7,40 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <cctype>
+#include <fstream>
 
 namespace boolean_expressions {
+
+enum class TokenType
+{
+  kIdentifier,
+  kTrue,
+  kFalse,
+  kNot,
+  kAnd,
+  kOr,
+  kRightBracket,
+  kLeftBracket,
+  kEOI,
+  kUnknown
+};
+
+inline std::ostream& operator<<(std::ostream& os, TokenType type) {
+  switch (type) {
+    case TokenType::kIdentifier: return os << "Identifier";
+    case TokenType::kTrue:       return os << "True";
+    case TokenType::kFalse:      return os << "False";
+    case TokenType::kNot:        return os << "Not";
+    case TokenType::kAnd:        return os << "And";
+    case TokenType::kOr:         return os << "Or";
+    case TokenType::kLeftBracket:  return os << "(";
+    case TokenType::kRightBracket: return os << ")";
+    case TokenType::kEOI:        return os << "EOI";
+    case TokenType::kUnknown:    return os << "Unknown";
+  }
+  return os;
+}
 
 struct ExpressionDefinition {
   std::string name;
@@ -26,6 +58,13 @@ struct SourceSpan {
   std::size_t end = 0;
 };
 
+struct Token
+{
+  TokenType kType;
+  SourceSpan span;
+  std::string_view text;
+};
+
 enum class DiagnosticCode {
   kSyntaxError,
   kDuplicateName,
@@ -41,6 +80,32 @@ struct Diagnostic {
   std::string message;
   std::optional<SourceSpan> span;
   std::vector<std::string> dependency_path;
+};
+
+class Tokenizer
+{
+public:
+
+  explicit Tokenizer(std::string_view input);
+
+  const std::vector<Token>& ParseInput();
+
+  const std::vector<Token>& GetTokens() const;
+
+private:
+  std::string_view source_;
+  std::size_t pos_;
+
+  std::vector<Token> tokens_;
+
+  Token NextToken();
+
+  bool HasMore() const;
+
+  void SkipWhiteSpace();
+  // return identifer that is not simple token as (&, |, )
+  Token ScanIdentifier();
+  
 };
 
 // Successful result of parsing and validating ProgramSource. Its internal AST

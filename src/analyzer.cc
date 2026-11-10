@@ -3,7 +3,110 @@
 #include <stdexcept>
 #include <utility>
 
+//for debug
+#include <iostream>
+
 namespace boolean_expressions {
+
+Tokenizer::Tokenizer(std::string_view input)
+  : source_(input), pos_(0) { }
+
+const std::vector<Token> &Tokenizer::ParseInput()
+{
+    while(HasMore())
+    {
+      tokens_.push_back(NextToken());
+    }
+    return GetTokens();
+}
+
+Token Tokenizer::NextToken()
+{
+    SkipWhiteSpace();
+    if(!HasMore())
+    {
+      return {TokenType::kEOI, SourceSpan{pos_, pos_}, { }};
+    }
+    std::size_t begin = pos_;
+    char current = source_[pos_];
+
+    switch (current)
+    {
+    case '!':
+      pos_++;
+      return {TokenType::kNot, SourceSpan{begin, pos_}, source_.substr(begin, pos_ - begin)};
+    case '&':
+      pos_++;
+      return {TokenType::kAnd, SourceSpan{begin, pos_}, source_.substr(begin, pos_ - begin)};
+    case '|':
+      pos_++;
+      return {TokenType::kOr, SourceSpan{begin, pos_}, source_.substr(begin, pos_ - begin)};
+    case '(':
+      pos_++;
+      return {TokenType::kLeftBracket, SourceSpan{begin, pos_}, source_.substr(begin, pos_ - begin)};
+    case ')':
+      pos_++;
+      return {TokenType::kRightBracket, SourceSpan{begin, pos_}, source_.substr(begin, pos_ - begin)};
+    default:
+      break;
+    }
+
+    if(std::isalnum(static_cast<unsigned char>(current)) || current == '_')
+    {
+      return ScanIdentifier();
+    }
+
+    // for unknown tokens
+    pos_++;
+    return {TokenType::kUnknown, SourceSpan{begin, pos_}, source_.substr(begin, 1)};
+}
+
+bool Tokenizer::HasMore() const
+{
+    return pos_ < source_.size();
+}
+
+const std::vector<Token>& Tokenizer::GetTokens() const
+{
+  return tokens_;
+}
+
+void Tokenizer::SkipWhiteSpace()
+{
+  while(HasMore() && std::isspace(static_cast<unsigned char>(source_[pos_])))
+  {
+    pos_++;
+  }
+}
+
+Token Tokenizer::ScanIdentifier()
+{
+  std::size_t begin = pos_;
+
+  while (HasMore()) {
+    char c = source_[pos_];
+    if (std::isalnum(static_cast<unsigned char>(c)) || c == '_') 
+    {
+      pos_++;
+    } 
+    else 
+    {
+      break;
+    }
+  }
+  std::string_view identifier = source_.substr(begin, pos_ - begin);
+  TokenType type = TokenType::kIdentifier;
+  if(identifier == "true")
+  {
+    type = TokenType::kTrue;
+  }
+  else if (identifier == "false")
+  {
+    type = TokenType::kFalse;
+  }
+  return {type, SourceSpan{begin, pos_}, identifier};
+
+}
 
 struct ValidatedProgram::Impl {
   std::string debug_string;
