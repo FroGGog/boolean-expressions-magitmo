@@ -38,6 +38,32 @@ TEST(Tokenizer, SimpleExpression)
   EXPECT_EQ(parsed_string[2].kType, boolean_expressions::TokenType::kIdentifier);
 }
 
+TEST(Tokenizer, TokenTypeRecognition)
+{
+  boolean_expressions::Tokenizer t("!");
+  t.ParseInput();
+  boolean_expressions::Tokenizer t2("&");
+  t2.ParseInput();
+  boolean_expressions::Tokenizer t3("|");
+  t3.ParseInput();
+  boolean_expressions::Tokenizer t4("(");
+  t4.ParseInput();
+  boolean_expressions::Tokenizer t5(")");
+  t5.ParseInput();
+  boolean_expressions::Tokenizer t6("");
+  t6.ParseInput();
+  boolean_expressions::Tokenizer t7(";");
+  t7.ParseInput();
+
+  EXPECT_EQ(t.GetTokens()[0].kType, boolean_expressions::TokenType::kNot);
+  EXPECT_EQ(t2.GetTokens()[0].kType, boolean_expressions::TokenType::kAnd);
+  EXPECT_EQ(t3.GetTokens()[0].kType, boolean_expressions::TokenType::kOr);
+  EXPECT_EQ(t4.GetTokens()[0].kType, boolean_expressions::TokenType::kLeftBracket);
+  EXPECT_EQ(t5.GetTokens()[0].kType, boolean_expressions::TokenType::kRightBracket);
+  EXPECT_EQ(t6.GetTokens()[0].kType, boolean_expressions::TokenType::kEOI);
+  EXPECT_EQ(t7.GetTokens()[0].kType, boolean_expressions::TokenType::kUnknown);
+}
+
 TEST(Tokenizer, EmptyExpression)
 {
   boolean_expressions::Tokenizer t("");

@@ -26,22 +26,6 @@ enum class TokenType
   kUnknown
 };
 
-inline std::ostream& operator<<(std::ostream& os, TokenType type) {
-  switch (type) {
-    case TokenType::kIdentifier: return os << "Identifier";
-    case TokenType::kTrue:       return os << "True";
-    case TokenType::kFalse:      return os << "False";
-    case TokenType::kNot:        return os << "Not";
-    case TokenType::kAnd:        return os << "And";
-    case TokenType::kOr:         return os << "Or";
-    case TokenType::kLeftBracket:  return os << "(";
-    case TokenType::kRightBracket: return os << ")";
-    case TokenType::kEOI:        return os << "EOI";
-    case TokenType::kUnknown:    return os << "Unknown";
-  }
-  return os;
-}
-
 struct ExpressionDefinition {
   std::string name;
   std::string text;
@@ -106,6 +90,26 @@ private:
   // return identifer that is not simple token as (&, |, )
   Token ScanIdentifier();
   
+};
+
+class AstNode
+{
+
+};
+
+class LiteralNode : public AstNode
+{
+
+};
+
+class UnaryOperatorNode : public AstNode
+{
+  
+};
+
+class BinaryOperatorNode : public AstNode
+{
+
 };
 
 // Successful result of parsing and validating ProgramSource. Its internal AST

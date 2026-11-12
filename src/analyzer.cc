@@ -90,7 +90,6 @@ void Tokenizer::SkipWhiteSpace()
 Token Tokenizer::ScanIdentifier()
 {
   std::size_t begin = pos_;
-
   while (HasMore()) {
     char c = source_[pos_];
     if (std::isalnum(static_cast<unsigned char>(c)) || c == '_') 
