@@ -115,6 +115,114 @@ Token Tokenizer::ScanIdentifier()
 
 }
 
+const Token &Parser::CurrentToken() const
+{
+  if(current_pos_ < tokens_.size())
+  {
+    return tokens_[current_pos_];
+  }
+  //kEOI
+  return tokens_.back();
+}
+
+void Parser::Advance()
+{
+  if(current_pos_ <= tokens_.size())
+  {
+    current_pos_++; 
+  }
+}
+
+void Parser::Expect(TokenType expected)
+{
+  if(CurrentToken().kType != expected)
+  {
+    throw ParseError("Unexpected token");
+  }
+  Advance();
+}
+
+Parser::Node Parser::ParseFactor()
+{
+  const Token& tok = CurrentToken();
+
+  // !
+  if(tok.kType == TokenType::kNot)
+  {
+    SourceSpan op_span = tok.span;
+    Node operand = ParseFactor();
+
+    SourceSpan total_span{op_span.begin, operand->span.end};
+    return std::make_unique<UnaryOperatorNode>(total_span, TokenType::kNot, std::move(operand));
+  }
+  // ( )
+  if(tok.kType == TokenType::kLeftBracket)
+  {
+    Advance();
+    // Expression inside (...)
+    Node inner = ParseExpression();
+    Expect(TokenType::kRightBracket);
+    return inner;
+  }
+  // Literal
+  if(tok.kType == TokenType::kIdentifier || tok.kType == TokenType::kTrue 
+    || tok.kType == TokenType::kFalse)
+  {
+    Node literal = std::make_unique<LiteralNode>(tok.span, tok.text, tok.kType);
+    Advance();
+    return literal;
+  }
+
+  throw ParseError("Expected factor (!, (, identifier, true, false)");
+}
+
+Parser::Node Parser::ParseTerm()
+{
+  Node left = ParseFactor();
+
+  while (CurrentToken().kType == TokenType::kAnd)
+  {
+    SourceSpan op_span = CurrentToken().span;
+    Advance();
+    Node right = ParseFactor();
+    SourceSpan total_span{left->span.begin, right->span.end};
+    left = std::make_unique<BinaryOperatorNode>(total_span, TokenType::kAnd, std::move(left), std::move(right));
+  }
+  return left;
+}
+
+Parser::Node Parser::ParseExpression()
+{
+  Node left = ParseTerm();
+
+  while(CurrentToken().kType == TokenType::kOr)
+  {
+    Advance();
+    Node right = ParseTerm();
+    SourceSpan total_span{left->span.begin, right->span.end};
+    left = std::make_unique<BinaryOperatorNode>(total_span, TokenType::kOr, std::move(left), std::move(right));
+  }
+  return left;
+}
+
+Parser::Node Parser::Parse()
+{
+  if(CurrentToken().kType == TokenType::kEOI)
+  {
+    throw ParseError("Empty expression");
+  }
+
+  Node root = ParseExpression();
+
+  if(CurrentToken().kType != TokenType::kEOI)
+  {
+    throw ParseError("Trailing input after expression");
+  }
+
+  return root;
+}
+
+
 struct ValidatedProgram::Impl {
   std::string debug_string;
 };
@@ -136,4 +244,4 @@ BuildResult BuildProgram(const ProgramSource& source) {
   throw std::logic_error("TODO: BuildProgram is not implemented");
 }
 
-}  // namespace boolean_expressions
+} // namespace boolean_expressions

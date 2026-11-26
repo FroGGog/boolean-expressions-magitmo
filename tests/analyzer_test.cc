@@ -73,6 +73,27 @@ TEST(Tokenizer, EmptyExpression)
   EXPECT_EQ(parsed_string[0].kType, boolean_expressions::TokenType::kEOI);
 }
 
+template<typename T>
+const T* AsNode(const boolean_expressions::AstNode* node)
+{
+  const T* casted = dynamic_cast<const T*>(node);
+  EXPECT_NE(casted, nullptr) << "Node type mismatch";
+  return casted;
+}
+
+TEST(Parser, SingleIdentifier) {
+    boolean_expressions::Tokenizer tokenizer("a");
+    boolean_expressions::Parser parser("test_expr", tokenizer.ParseInput());
+    
+    auto ast = parser.Parse();
+    ASSERT_TRUE(ast != nullptr);
+    const auto* literal = AsNode<boolean_expressions::LiteralNode>(ast.get());
+    
+    EXPECT_EQ(literal->value, "a");
+    EXPECT_EQ(literal->type, boolean_expressions::TokenType::kIdentifier);
+    EXPECT_EQ(literal->span.begin, 0);
+    EXPECT_EQ(literal->span.end, 1);
+}
 
 // Replace and extend these wiring tests with parameterized parser, AST and
 // validation tests over every case from public_cases.h.

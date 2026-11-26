@@ -94,21 +94,73 @@ private:
 
 class AstNode
 {
-
+public:
+  virtual ~AstNode() = default;
+  const SourceSpan span;
+protected:
+  explicit AstNode(SourceSpan s) : span(s) {}
 };
 
 class LiteralNode : public AstNode
 {
+public:
+  const std::string_view value;
+  const TokenType type;
 
+  LiteralNode(SourceSpan s, std::string_view v, TokenType t)
+    : AstNode(s), value(v), type(t)
+  {}
 };
 
 class UnaryOperatorNode : public AstNode
 {
-  
+public:
+  const TokenType op;
+  const std::unique_ptr<const AstNode> operand;
+
+  UnaryOperatorNode(SourceSpan s, TokenType o, std::unique_ptr<const AstNode> opnd)
+    : AstNode(s), op(o), operand(std::move(opnd)) {}
 };
 
 class BinaryOperatorNode : public AstNode
 {
+public:
+  using Node = std::unique_ptr<const AstNode>;
+  const TokenType op;
+  const Node left;
+  const Node right;
+
+  BinaryOperatorNode(SourceSpan s, TokenType o, Node l, Node r)
+    : AstNode(s), op(o), left(std::move(l)), right(std::move(r)) {}
+};
+
+class ParseError : public std::runtime_error
+{
+public:
+  explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
+class Parser
+{
+public:
+  Parser(std::string expr_name, const std::vector<Token>& tokens)
+        : expr_name_(std::move(expr_name)), tokens_(tokens), current_pos_(0) {}
+
+  using Node = std::unique_ptr<const AstNode>;
+  Node Parse();
+
+private:
+std::string expr_name_;
+  std::vector<Token> tokens_;
+  std::size_t current_pos_ = 0;
+
+  const Token& CurrentToken() const;
+  void Advance();
+  void Expect(TokenType expected);
+
+  Node ParseExpression();
+  Node ParseTerm();
+  Node ParseFactor();
 
 };
 
