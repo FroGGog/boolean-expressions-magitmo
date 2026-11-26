@@ -127,7 +127,7 @@ const Token &Parser::CurrentToken() const
 
 void Parser::Advance()
 {
-  if(current_pos_ <= tokens_.size())
+  if(current_pos_ < tokens_.size())
   {
     current_pos_++; 
   }
@@ -150,6 +150,7 @@ Parser::Node Parser::ParseFactor()
   if(tok.kType == TokenType::kNot)
   {
     SourceSpan op_span = tok.span;
+    Advance();
     Node operand = ParseFactor();
 
     SourceSpan total_span{op_span.begin, operand->span.end};
@@ -182,7 +183,6 @@ Parser::Node Parser::ParseTerm()
 
   while (CurrentToken().kType == TokenType::kAnd)
   {
-    SourceSpan op_span = CurrentToken().span;
     Advance();
     Node right = ParseFactor();
     SourceSpan total_span{left->span.begin, right->span.end};
